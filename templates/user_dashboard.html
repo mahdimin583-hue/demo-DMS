@@ -1,0 +1,227 @@
+
+{% extends "base.html" %}
+{% block title %}Resident Portal | FloodGuard PH{% endblock %}
+{% block content %}
+<section class="page-heading mb-4">
+    <p class="section-label">PUBLIC INFORMATION PORTAL</p>
+    <h1 class="h2 fw-bold">Resident Dashboard</h1>
+    <p class="text-muted">Review monitoring-zone readings, local risk status, and evacuation resources.</p>
+</section>
+
+{% if regions and selected_region %}
+<section class="card dashboard-card mb-4">
+    <div class="card-body">
+        <form method="GET" action="{{ url_for('user_dashboard') }}">
+            <label for="region_id" class="form-label fw-semibold">Select your monitoring zone</label>
+            <div class="row g-2">
+                <div class="col-md-9">
+                    <select id="region_id" name="region_id" class="form-select" onchange="this.form.submit()">
+                        {% for region in regions %}
+                        <option value="{{ region.id }}" {% if region.id == selected_region.id %}selected{% endif %}>{{ region.zone_code }} — {{ region.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <button class="btn btn-primary w-100" type="submit">View Zone</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</section>
+
+<section class="card dashboard-card mb-4">
+    <div class="card-body">
+        <div class="d-flex flex-wrap justify-content-between gap-3">
+            <div>
+                <p class="section-label mb-1">SELECTED MONITORING ZONE</p>
+                <h2 class="h4 fw-bold mb-1">{{ selected_region.name }}</h2>
+                <span class="text-muted">Zone code: {{ selected_region.zone_code }}</span>
+            </div>
+
+            <div>
+                {% set risk = selected_region.risk_level %}
+                {% set risk_class = {'Green': 'risk-green', 'Yellow': 'risk-yellow', 'Orange': 'risk-orange', 'Red': 'risk-red'}.get(risk, 'risk-unknown') %}
+                <p class="small text-muted mb-2">Recorded risk level</p>
+                <span class="risk-badge {{ risk_class }}">
+                    {{ risk|upper }} —
+                    {% if risk == 'Green' %}NORMAL
+                    {% elif risk == 'Yellow' %}ALERT
+                    {% elif risk == 'Orange' %}WARNING
+                    {% elif risk == 'Red' %}CRITICAL
+                    {% else %}UNCLASSIFIED
+                    {% endif %}
+                </span>
+            </div>
+        </div>
+
+        <p class="small text-muted mt-3 mb-0">Risk level is the value currently stored in the database. This demonstration is not an official safety assessment.</p>
+    </div>
+</section>
+
+<section class="mb-4">
+    <h2 class="h5 fw-bold mb-3">Current Sensor Readings</h2>
+
+    <div class="row g-3">
+        {% set rainfall_found = namespace(value=false) %}
+        {% set water_found = namespace(value=false) %}
+
+        {% for sensor in sensors %}
+            {% if sensor.sensor_type == 'Rainfall' %}
+                {% set rainfall_found.value = true %}
+                <div class="col-md-6">
+                    <div class="card dashboard-card h-100">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <p class="text-muted mb-1">Rainfall Intensity</p>
+                                    <div class="metric-value">{{ "%.1f"|format(sensor.current_value) }}</div>
+                                    <span class="text-muted">mm/hr</span>
+                                </div>
+                                <div class="sensor-icon rainfall-icon"><span aria-hidden="true">🌧️</span></div>
+                            </div>
+                            <p class="small text-muted mt-3 mb-0">Sensor ID: {{ sensor.id }}</p>
+                        </div>
+                    </div>
+                </div>
+            {% elif sensor.sensor_type == 'Water-Level' %}
+                {% set water_found.value = true %}
+                <div class="col-md-6">
+                    <div class="card dashboard-card h-100">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <p class="text-muted mb-1">Water Level</p>
+                                    <div class="metric-value">{{ "%.2f"|format(sensor.current_value) }}</div>
+                                    <span class="text-muted">meters</span>
+                                </div>
+                                <div class="sensor-icon water-icon"><span aria-hidden="true">💧</span></div>
+                            </div>
+                            <p class="small text-muted mt-3 mb-0">Sensor ID: {{ sensor.id }}</p>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+        {% endfor %}
+
+        {% if not rainfall_found.value %}
+        <div class="col-md-6">
+            <div class="card dashboard-card h-100">
+                <div class="card-body">
+                    <p class="text-muted mb-1">Rainfall Intensity</p>
+                    <div class="metric-value">N/A</div>
+                    <p class="small text-muted mb-0">No rainfall sensor is registered for this zone.</p>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if not water_found.value %}
+        <div class="col-md-6">
+            <div class="card dashboard-card h-100">
+                <div class="card-body">
+                    <p class="text-muted mb-1">Water Level</p>
+                    <div class="metric-value">N/A</div>
+                    <p class="small text-muted mb-0">No water-level sensor is registered for this zone.</p>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</section>
+
+<section class="card dashboard-card mb-4">
+    <div class="card-body">
+        <h2 class="h5 fw-bold mb-3">Monitored Zones & Risk Status</h2>
+
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead>
+                    <tr>
+                        <th scope="col">Zone Code</th>
+                        <th scope="col">Area</th>
+                        <th scope="col">Risk Status</th>
+                        <th scope="col">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for region in regions %}
+                    {% set zone_class = {'Green': 'risk-green', 'Yellow': 'risk-yellow', 'Orange': 'risk-orange', 'Red': 'risk-red'}.get(region.risk_level, 'risk-unknown') %}
+                    <tr>
+                        <td>{{ region.zone_code }}</td>
+                        <td>{{ region.name }}</td>
+                        <td><span class="risk-badge {{ zone_class }}">{{ region.risk_level }}</span></td>
+                        <td><a class="btn btn-sm btn-outline-primary" href="{{ url_for('user_dashboard', region_id=region.id) }}">View Zone</a></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
+
+<section class="card dashboard-card mb-4">
+    <div class="card-body">
+        <h2 class="h5 fw-bold mb-1">Evacuation Centers</h2>
+        <p class="text-muted small mb-3">Registered centers for {{ selected_region.name }}.</p>
+
+        {% if centers %}
+        <div class="table-responsive">
+            <table class="table align-middle">
+                <thead>
+                    <tr>
+                        <th scope="col">Center Name</th>
+                        <th scope="col">Capacity</th>
+                        <th scope="col">Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for center in centers %}
+                    <tr>
+                        <td class="fw-semibold">{{ center.name }}</td>
+                        <td>{{ center.capacity }} persons</td>
+                        <td>
+                            {% if center.current_status == 'Open' %}
+                            <span class="status-pill status-open">Open</span>
+                            {% elif center.current_status == 'Full' %}
+                            <span class="status-pill status-full">Full</span>
+                            {% else %}
+                            <span class="status-pill status-unknown">{{ center.current_status }}</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty-state">No evacuation centers are registered for this zone.</div>
+        {% endif %}
+
+        <p class="small text-muted mb-0">Capacity is the registered maximum, not a live occupancy count. Confirm center availability with local authorities.</p>
+    </div>
+</section>
+
+<section class="card dashboard-card mb-4">
+    <div class="card-body">
+        <h2 class="h5 fw-bold mb-3">Recent Broadcast Alerts</h2>
+
+        {% if alerts %}
+            {% for alert in alerts %}
+            <div class="alert-entry mb-3">
+                <div class="d-flex flex-wrap justify-content-between gap-2">
+                    <strong>{{ alert.alert_level }} Alert</strong>
+                    <small class="text-muted">{{ alert.timestamp.strftime('%Y-%m-%d %H:%M UTC') }}</small>
+                </div>
+                <p class="mb-0 mt-2">{{ alert.message }}</p>
+            </div>
+            {% endfor %}
+        {% else %}
+            <p class="text-muted mb-0">No broadcast alerts are recorded for this zone.</p>
+        {% endif %}
+    </div>
+</section>
+
+{% else %}
+<div class="alert alert-info" role="status">No monitoring zones are available yet. Initialize the database and add region records before using the resident portal.</div>
+{% endif %}
+{% endblock %}

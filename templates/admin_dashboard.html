@@ -1,0 +1,301 @@
+
+{% extends "base.html" %}
+{% block title %}Admin Dashboard | FloodGuard PH{% endblock %}
+{% block content %}
+<section class="page-heading mb-4">
+    <p class="section-label">DRRM OPERATIONS</p>
+    <h1 class="h2 fw-bold">Administrative Dashboard</h1>
+    <p class="text-muted">Monitor recorded conditions and manage demonstration alerts.</p>
+</section>
+
+<div class="alert alert-warning" role="alert">
+    <strong>Coursework simulation only.</strong>
+    This dashboard has no authentication and is not authorized for real emergency operations. Alert records do not transmit messages.
+</div>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+    {% for category, message in messages %}
+    <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    {% endfor %}
+{% endwith %}
+
+<div class="row g-3 mb-4">
+    <div class="col-sm-6 col-xl-3">
+        <div class="card dashboard-card h-100">
+            <div class="card-body">
+                <p class="text-muted mb-1">Monitored Regions</p>
+                <div class="metric-value">{{ region_count }}</div>
+                <small class="text-muted">Registered zones</small>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-sm-6 col-xl-3">
+        <div class="card dashboard-card h-100">
+            <div class="card-body">
+                <p class="text-muted mb-1">Registered Sensors</p>
+                <div class="metric-value">{{ sensor_count }}</div>
+                <small class="text-muted">Rainfall and water-level</small>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-sm-6 col-xl-3">
+        <div class="card dashboard-card h-100">
+            <div class="card-body">
+                <p class="text-muted mb-1">Recorded Alerts</p>
+                <div class="metric-value">{{ alert_count }}</div>
+                <small class="text-muted">All alert records</small>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-sm-6 col-xl-3">
+        <div class="card dashboard-card h-100">
+            <div class="card-body">
+                <p class="text-muted mb-1">Non-Green Alert Records</p>
+                <div class="metric-value">{{ non_green_alert_count }}</div>
+                <small class="text-muted">Historical Yellow, Orange, and Red records</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<section class="card dashboard-card mb-4">
+    <div class="card-body">
+        <h2 class="h5 fw-bold mb-3">Regional Risk Distribution</h2>
+        <div class="row g-3">
+            {% for level, css_class in [
+                ('Green', 'risk-green'),
+                ('Yellow', 'risk-yellow'),
+                ('Orange', 'risk-orange'),
+                ('Red', 'risk-red')
+            ] %}
+            <div class="col-6 col-lg-3">
+                <div class="risk-summary">
+                    <span class="risk-badge {{ css_class }}">{{ level }}</span>
+                    <div class="metric-value mt-2">{{ risk_counts[level] }}</div>
+                    <small class="text-muted">Regions</small>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<div class="row g-4 mb-4">
+    <div class="col-lg-6">
+        <section class="card dashboard-card h-100">
+            <div class="card-body">
+                <h2 class="h5 fw-bold mb-2">Sensor Simulator</h2>
+                <p class="text-muted small">Submit a test reading to update the sensor, save a history record, and recalculate the region's risk.</p>
+
+                <form method="POST" action="{{ url_for('simulate_sensor') }}">
+                    <div class="mb-3">
+                        <label for="region_id" class="form-label">Monitoring Region</label>
+                        <select id="region_id" name="region_id" class="form-select" required>
+                            <option value="">Select a region</option>
+                            {% for region in regions %}
+                            <option value="{{ region.id }}">{{ region.zone_code }} — {{ region.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="sensor_id" class="form-label">Sensor</label>
+                        <select id="sensor_id" name="sensor_id" class="form-select" required>
+                            <option value="">Select a sensor</option>
+                            {% for sensor in sensors %}
+                            <option value="{{ sensor.id }}" data-region-id="{{ sensor.region_id }}">{{ sensor.region.zone_code }} — {{ sensor.sensor_type }} (ID {{ sensor.id }})</option>
+                            {% endfor %}
+                        </select>
+                        <small class="form-text text-muted">Choose a sensor belonging to the selected region.</small>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="reading_value" class="form-label">New Reading</label>
+                        <input id="reading_value" name="reading_value" type="number" step="any" min="0" class="form-control" placeholder="e.g. 32.5" required>
+                        <small class="form-text text-muted">Rainfall uses mm/hr; water level uses meters.</small>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100">Save Reading & Recalculate Risk</button>
+                </form>
+            </div>
+        </section>
+    </div>
+
+    <div class="col-lg-6">
+        <section class="card dashboard-card h-100">
+            <div class="card-body">
+                <h2 class="h5 fw-bold mb-2">Broadcast Warning</h2>
+                <p class="text-muted small">Save a region-specific alert record for display in the resident portal.</p>
+
+                <form method="POST" action="{{ url_for('broadcast_alert') }}">
+                    <div class="mb-3">
+                        <label for="alert_region_id" class="form-label">Target Region</label>
+                        <select id="alert_region_id" name="region_id" class="form-select" required>
+                            <option value="">Select a region</option>
+                            {% for region in regions %}
+                            <option value="{{ region.id }}">{{ region.zone_code }} — {{ region.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="alert_level" class="form-label">Alert Level</label>
+                        <select id="alert_level" name="alert_level" class="form-select" required>
+                            <option value="Green">Green — Normal</option>
+                            <option value="Yellow">Yellow — Alert</option>
+                            <option value="Orange">Orange — Warning</option>
+                            <option value="Red">Red — Critical</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="message" class="form-label">Alert Message</label>
+                        <textarea id="message" name="message" class="form-control" rows="4" maxlength="2000" placeholder="Enter the demonstration alert message" required></textarea>
+                    </div>
+
+                    <button type="submit" class="btn btn-danger w-100">Save Alert Record</button>
+                </form>
+
+                <p class="small text-muted mt-3 mb-0">No SMS, app push notification, or social-media post will be sent by this coursework application.</p>
+            </div>
+        </section>
+    </div>
+</div>
+
+<section class="card dashboard-card mb-4">
+    <div class="card-body">
+        <h2 class="h5 fw-bold mb-3">Monitored Regions</h2>
+
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead>
+                    <tr>
+                        <th>Zone</th>
+                        <th>Region</th>
+                        <th>Risk Level</th>
+                        <th>Sensors</th>
+                        <th>Evacuation Centers</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for region in regions %}
+                    {% set risk_class = {
+                        'Green': 'risk-green',
+                        'Yellow': 'risk-yellow',
+                        'Orange': 'risk-orange',
+                        'Red': 'risk-red'
+                    }.get(region.risk_level, 'risk-unknown') %}
+                    <tr>
+                        <td>{{ region.zone_code }}</td>
+                        <td>{{ region.name }}</td>
+                        <td><span class="risk-badge {{ risk_class }}">{{ region.risk_level }}</span></td>
+                        <td>{{ region.sensors|length }}</td>
+                        <td>{{ region.evacuation_centers|length }}</td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="5" class="text-center text-muted">No regions are registered.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
+
+<section class="card dashboard-card mb-4">
+    <div class="card-body">
+        <h2 class="h5 fw-bold mb-3">Recent Sensor Logs</h2>
+
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead>
+                    <tr>
+                        <th>Region</th>
+                        <th>Sensor</th>
+                        <th>Reading</th>
+                        <th>Recorded At</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for log in recent_logs %}
+                    <tr>
+                        <td>{{ log.sensor.region.zone_code }}</td>
+                        <td>{{ log.sensor.sensor_type }}</td>
+                        <td>{{ log.reading_value }} {{ log.sensor.unit }}</td>
+                        <td>{{ log.timestamp.strftime('%Y-%m-%d %H:%M') }}</td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="4" class="text-center text-muted">No sensor readings are recorded.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
+
+<section class="card dashboard-card">
+    <div class="card-body">
+        <h2 class="h5 fw-bold mb-3">Recent Alert Records</h2>
+
+        {% for alert in recent_alerts %}
+        <div class="alert-entry mb-3">
+            <div class="d-flex flex-wrap justify-content-between gap-2">
+                <strong>{{ alert.alert_level }} — {{ alert.region.name }}</strong>
+                <small class="text-muted">{{ alert.timestamp.strftime('%Y-%m-%d %H:%M') }}</small>
+            </div>
+            <p class="mt-2 mb-0">{{ alert.message }}</p>
+        </div>
+        {% else %}
+        <p class="text-muted mb-0">No alerts have been recorded.</p>
+        {% endfor %}
+    </div>
+</section>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const regionSelect = document.getElementById("region_id");
+        const sensorSelect = document.getElementById("sensor_id");
+
+        if (!regionSelect || !sensorSelect) {
+            return;
+        }
+
+        const sensorOptions = Array.from(sensorSelect.options);
+
+        function filterSensors() {
+            const selectedRegion = regionSelect.value;
+            let selectedStillValid = false;
+
+            sensorOptions.forEach(function (option, index) {
+                if (index === 0) {
+                    option.hidden = false;
+                    return;
+                }
+
+                const matches = option.dataset.regionId === selectedRegion;
+                option.hidden = !matches;
+
+                if (matches && option.value === sensorSelect.value) {
+                    selectedStillValid = true;
+                }
+            });
+
+            if (!selectedStillValid) {
+                sensorSelect.value = "";
+            }
+        }
+
+        regionSelect.addEventListener("change", filterSensors);
+        filterSensors();
+    });
+</script>
+{% endblock %}

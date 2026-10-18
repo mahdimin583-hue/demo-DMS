@@ -1,0 +1,243 @@
+
+:root {
+    --flood-navy: #12304a;
+    --flood-blue: #155e8a;
+    --flood-light: #f3f7fa;
+    --flood-border: #dce5ec;
+    --risk-green: #198754;
+    --risk-yellow: #f0c419;
+    --risk-orange: #e87519;
+    --risk-red: #c62828;
+}
+
+body {
+    background: var(--flood-light);
+    color: #243342;
+    min-height: 100vh;
+}
+
+.flood-navbar {
+    background: var(--flood-navy);
+}
+
+.navbar-brand {
+    letter-spacing: 0.3px;
+}
+
+.notice-banner {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.85rem 1rem;
+    border-left: 4px solid var(--flood-blue);
+    border-radius: 0.35rem;
+    background: #e7f1f8;
+    color: var(--flood-navy);
+}
+
+.page-heading {
+    padding: 0.5rem 0;
+}
+
+.section-label {
+    color: var(--flood-blue);
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 1.3px;
+}
+
+.dashboard-card {
+    border: 1px solid var(--flood-border);
+    border-radius: 0.75rem;
+    box-shadow: 0 3px 12px rgb(18 48 74 / 5%);
+}
+
+.dashboard-card .card-body {
+    padding: 1.25rem;
+}
+
+.metric-value {
+    font-size: 2rem;
+    font-weight: 750;
+    color: var(--flood-navy);
+}
+
+.risk-badge {
+    display: inline-block;
+    padding: 0.4rem 0.75rem;
+    border-radius: 0.35rem;
+    font-size: 0.8rem;
+    font-weight: 750;
+}
+
+.risk-green {
+    background: #d8f3e3;
+    color: #12643b;
+}
+
+.risk-yellow {
+    background: #fff1b8;
+    color: #765900;
+}
+
+.risk-orange {
+    background: #ffe1c7;
+    color: #923e00;
+}
+
+.risk-red {
+    background: #f8d7da;
+    color: #842029;
+}
+
+.table thead th {
+    background: #edf3f7;
+    color: var(--flood-navy);
+    font-size: 0.875rem;
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: #6ba7cc;
+    box-shadow: 0 0 0 0.2rem rgb(21 94 138 / 15%);
+}
+
+.site-footer {
+    border-top: 1px solid var(--flood-border);
+    color: #627282;
+    background: #fff;
+}
+
+@media (max-width: 576px) {
+    .notice-banner {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .dashboard-card .card-body {
+        padding: 1rem;
+    }
+
+    .metric-value {
+        font-size: 1.75rem;
+    }
+}
+
+.sensor-icon {
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 0.75rem;
+    font-size: 1.5rem;
+}
+
+.rainfall-icon {
+    background: #e7f1fb;
+}
+
+.water-icon {
+    background: #dff4fb;
+}
+
+.risk-unknown {
+    background: #e9ecef;
+    color: #495057;
+}
+
+.status-pill {
+    display: inline-block;
+    border-radius: 999px;
+    padding: 0.3rem 0.7rem;
+    font-size: 0.8rem;
+    font-weight: 700;
+}
+
+.status-open {
+    background: #d8f3e3;
+    color: #12643b;
+}
+
+.status-full {
+    background: #f8d7da;
+    color: #842029;
+}
+
+.status-unknown {
+    background: #e9ecef;
+    color: #495057;
+}
+
+.alert-entry {
+    padding: 1rem;
+    border: 1px solid var(--flood-border);
+    border-left: 4px solid var(--flood-blue);
+    border-radius: 0.5rem;
+    background: #fff;
+    overflow-wrap: anywhere;
+}
+
+.empty-state {
+    padding: 1.5rem;
+    text-align: center;
+    border: 1px dashed #c6d4df;
+    border-radius: 0.5rem;
+    color: #627282;
+    background: #f8fafc;
+}
+
+.table td,
+.table th {
+    vertical-align: middle;
+}
+
+@media (max-width: 576px) {
+    .sensor-icon {
+        width: 40px;
+        height: 40px;
+        font-size: 1.25rem;
+    }
+}
+
+.risk-summary {
+    padding: 1rem;
+    height: 100%;
+    border: 1px solid var(--flood-border);
+    border-radius: 0.65rem;
+    background: #fff;
+}
+
+.admin-section-title {
+    color: var(--flood-navy);
+    font-weight: 700;
+}
+
+.dashboard-card form .form-label {
+    color: #34495a;
+    font-weight: 600;
+}
+
+.dashboard-card .btn {
+    font-weight: 600;
+}
+
+.dashboard-card textarea {
+    resize: vertical;
+}
+
+.alert-entry strong {
+    overflow-wrap: anywhere;
+}
+
+.table-responsive {
+    border-radius: 0.35rem;
+}
+
+@media (max-width: 576px) {
+    .risk-summary {
+        padding: 0.8rem;
+    }
+}

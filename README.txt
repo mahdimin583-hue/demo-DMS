@@ -1,4 +1,4 @@
-FloodGuard PH 🌧️
+FloodGuard PH
 Flood Monitoring and Disaster Risk Reduction Dashboard
 
 FloodGuard PH is a web-based flood monitoring and disaster risk reduction (DRRM) project built with Python, Flask, SQLAlchemy, and SQLite. It provides a simple dashboard for monitoring simulated rainfall and water-level readings, viewing flood risk levels, finding evacuation centers, and broadcasting alerts.
